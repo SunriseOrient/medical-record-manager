@@ -25,7 +25,7 @@ echo "正在将压缩包拷入容器..."
 /usr/local/bin/docker cp "$ARCHIVE_PATH" "$CONTAINER_NAME":"$CONTAINER_TMP"/
 
 echo "正在停止容器内的 Node 进程..."
-/usr/local/bin/docker exec "$CONTAINER_NAME" sh -c "pm2 delete '$PROJECT_NAME' || true"
+/usr/local/bin/docker exec "$CONTAINER_NAME" sh -c "pm2 delete 'backend' || true"
 
 echo "正在删除已有的部署目录..."
 /usr/local/bin/docker exec "$CONTAINER_NAME" sh -c "rm -rf '$TARGET_DIR'"
