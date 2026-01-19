@@ -35,8 +35,7 @@ export const config = {
   uploadDir: process.env.UPLOAD_DIR || "./medical-records",
   maxFileSize: parseInt(process.env.MAX_FILE_SIZE || "20971520"), // 20MB
   fileServiceBaseUrl:
-    process.env.FILE_SERVICE_BASE_URL ||
-    "https://sunrise666.top:14070/file_store",
+    process.env.FILE_SERVICE_BASE_URL || "http://192.168.1.3:7070/file_store",
   uploadApiToken: process.env.UPLOAD_API_TOKEN,
   uploadApiTokenHeader: process.env.UPLOAD_API_TOKEN_HEADER || "x-file-token",
 
