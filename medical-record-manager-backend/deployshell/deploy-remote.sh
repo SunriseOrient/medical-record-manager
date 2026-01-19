@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-PROJECT_NAME="medical-record-manager-server"
+PROJECT_NAME="medical-record-manager-backend"
 ARCHIVE_PATH="/tmp/${PROJECT_NAME}.tar.gz"
 CONTAINER_NAME="$PROJECT_NAME"
 CONTAINER_TMP="/tmp"
@@ -37,6 +37,6 @@ echo "正在安装依赖..."
 /usr/local/bin/docker exec "$CONTAINER_NAME" sh -c "cd '$TARGET_DIR' && npm install"
 
 echo "正在后台启动服务..."
-/usr/local/bin/docker exec "$CONTAINER_NAME" sh -c "cd '$TARGET_DIR' && pm2 start src/index.js --name '$PROJECT_NAME' && pm2 save && pm2 logs '$PROJECT_NAME' > '$LOG_PATH' 2>&1 &"
+/usr/local/bin/docker exec "$CONTAINER_NAME" sh -c "cd '$TARGET_DIR' && pm2 start src/index.js --name 'backend' && pm2 save && pm2 logs 'backend' > '$LOG_PATH' 2>&1 &"
 
 echo "部署完成，服务应已在容器内运行。"

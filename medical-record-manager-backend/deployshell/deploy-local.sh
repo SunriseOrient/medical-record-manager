@@ -6,7 +6,7 @@ set +x
 set -e
 
 # 定义变量
-PROJECT_DIR="medical-record-manager-server"
+PROJECT_DIR="medical-record-manager-backend"
 TEMP_DIR="temp_package"
 
 # 显示当前工作目录
