@@ -10,8 +10,9 @@ const getRelativePath = (filePath) => {
   if (!filePath) return "";
   try {
     if (filePath.startsWith("http")) {
+      const url = new URL(filePath);
       return decodeURIComponent(
-        filePath.replace(config.fileServiceBaseUrl, "").replace(/^\/+/, ""),
+        url.pathname.replace("/file_store/", "").replace(/^\/+/, ""),
       );
     }
     return filePath.replace(/^\/+/, "");
