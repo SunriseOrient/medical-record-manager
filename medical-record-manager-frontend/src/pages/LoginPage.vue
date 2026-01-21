@@ -1,30 +1,55 @@
 ﻿<template>
-  <div class="login-page">
-    <div class="login-container">
-      <h1>医疗病例管理系统</h1>
-      <el-form @submit.prevent="isRegisterMode ? handleRegister() : handleLogin()"
-        @keyup.enter="isRegisterMode ? handleRegister() : handleLogin()" label-position="top">
-        <el-form-item label="用户名">
-          <el-input v-model="form.username" placeholder="请输入用户名" :maxlength="20" />
-        </el-form-item>
-        <el-form-item label="密码">
-          <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password />
-        </el-form-item>
-        <el-form-item v-if="isRegisterMode" label="确认密码">
-          <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" show-password />
+  <div class="login-bg">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-title"><img src="/favicon.svg" class="login-logo" alt="logo" />
+          <h1>医疗病例管理系统</h1>
+        </div>
+        <div class="login-subtitle">Medical Record Manager</div>
+      </div>
+      <el-form class="login-form" @submit.prevent="isRegisterMode ? handleRegister() : handleLogin()">
+        <el-form-item>
+          <el-input v-model="form.username" placeholder="请输入用户名" :maxlength="20" size="large">
+            <template #prefix>
+              <el-icon>
+                <User />
+              </el-icon>
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="isRegisterMode ? handleRegister() : handleLogin()" :loading="loading">
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password size="large">
+            <template #prefix>
+              <el-icon>
+                <Lock />
+              </el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item v-if="isRegisterMode">
+          <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" show-password size="large">
+            <template #prefix>
+              <el-icon>
+                <Lock />
+              </el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="login-btn" @click="isRegisterMode ? handleRegister() : handleLogin()"
+            :loading="loading">
             {{ isRegisterMode ? "注 册" : "登 录" }}
           </el-button>
         </el-form-item>
-        <el-form-item>
-          <el-button @click="toggleMode" :disabled="loading">
-            {{ isRegisterMode ? "已有账号？去登录" : "没有账号？去注册" }}
+        <div class="login-divider"></div>
+        <div class="login-helper">
+          还没有账号？<el-button class="login-switch-btn" @click="toggleMode" :disabled="loading" link>
+            {{ isRegisterMode ? "已有账号？去登录" : "立即注册" }}
           </el-button>
-        </el-form-item>
+        </div>
       </el-form>
     </div>
+    <div class="login-footer">© 2026 医疗病例管理系统. All rights reserved.</div>
   </div>
 </template>
 
@@ -34,6 +59,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "../stores/userStore";
 import { authAPI } from "../services/api";
 import { ElMessage } from "element-plus";
+import { User, Lock } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -136,160 +162,306 @@ const handleRegister = async () => {
 </script>
 
 <style>
-/* 非 scoped：仅当登录页挂载时为 html、body 生效 */
 html.login-page-reset,
 body.login-page-reset {
   margin: 0;
   padding: 0;
 }
+
+:root {
+  --app-bg-color-secondary: #252525;
+  --app-bg-color: #1a1a1a;
+  --app-card-bg-color: #252525;
+}
+
+.login-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--app-bg-color-secondary) 0%, var(--app-bg-color) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0;
+}
+
+.login-card {
+  background: var(--app-card-bg-color);
+  border-radius: 16px;
+  box-shadow: 0 6px 32px 0 rgba(0, 0, 0, 0.18);
+  padding: 48px 40px 32px 40px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1.5px solid #313235;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .login-bg {
+    padding: 0 4vw;
+  }
+
+  .login-card {
+    padding: 24px 8px 20px 8px;
+    border-radius: 10px;
+    max-width: 100vw;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .login-header {
+    margin-bottom: 18px;
+  }
+
+  .login-title {
+    font-size: 1.1rem;
+  }
+
+  .login-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .login-btn {
+    height: 42px;
+    font-size: 1rem;
+  }
+
+  :deep(.el-input__wrapper) {
+    min-height: 40px;
+    font-size: 1rem;
+  }
+
+  .login-footer {
+    font-size: 12px;
+    bottom: 10px;
+  }
+}
+
+@media (max-width: 375px) {
+  .login-bg {
+    padding: 0 2vw;
+  }
+
+  .login-card {
+    padding: 14px 2px 12px 2px;
+    border-radius: 8px;
+  }
+
+  .login-title {
+    font-size: 1rem;
+  }
+}
 </style>
 
 <style scoped>
-.login-page {
+.login-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--app-bg-color-secondary) 0%, var(--app-bg-color) 100%);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: #0f1115;
-  padding: 16px;
+  position: relative;
 }
 
-.login-container {
-  background: #121417;
-  padding: 32px;
-  border-radius: 12px;
-  border: 1px solid #1f2937;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+.login-card {
+  background: var(--app-card-bg-color);
+  border-radius: 16px;
+  box-shadow: 0 6px 32px 0 rgba(0, 0, 0, 0.18);
+  padding: 48px 40px 32px 40px;
   width: 100%;
-  max-width: 380px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue",
-    Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  color: #e5e7eb;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1.5px solid #313235;
+  box-sizing: border-box;
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .login-page {
-    padding: 12px;
-  }
-
-  .login-container {
-    padding: 24px 20px;
-    border-radius: 8px;
-    max-width: 100%;
-  }
-
-  .login-container h1 {
-    font-size: 18px;
-    margin-bottom: 20px;
-  }
-
-  :deep(.el-form-item) {
-    margin-bottom: 14px;
-  }
-
-  :deep(.el-form-item__label) {
-    font-size: 14px;
-  }
-
-  :deep(.el-input__inner) {
-    font-size: 16px;
-    /* 防止iOS自动缩放 */
-  }
-
-  .login-container :deep(.el-button) {
-    height: 44px;
-    /* 移动端更易点击 */
-    font-size: 15px;
-  }
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+  width: 100%;
 }
 
-/* 小屏手机适配 */
-@media (max-width: 375px) {
-  .login-page {
-    padding: 8px;
-  }
-
-  .login-container {
-    padding: 20px 16px;
-  }
-
-  .login-container h1 {
-    font-size: 16px;
-    margin-bottom: 16px;
-  }
+.login-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.10);
+  margin-right: 10px;
 }
 
-.login-container h1 {
-  text-align: center;
-  margin-bottom: 24px;
+.login-title {
+  font-size: 2rem;
+  font-weight: 700;
   color: #f3f4f6;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  margin-bottom: 6px;
+  letter-spacing: 2px;
+  font-family: 'Segoe UI', 'Arial', 'Helvetica Neue', Arial, sans-serif;
+  display: flex;
+  align-items: center;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+  }
 }
 
-/* 顶部标签更简洁的配色 */
-:deep(.el-form-item__label) {
-  color: #9ca3af;
-  font-weight: 500;
+.login-subtitle {
+  font-size: 13px;
+  color: #bfc3c9;
+  text-align: center;
+  margin-bottom: 0;
+  font-family: 'Segoe UI', 'Arial', 'Helvetica Neue', Arial, sans-serif;
+  margin-top: 10px;
 }
 
-/* 输入框采用细边框、圆角，聚焦时高亮 */
+.login-form {
+  width: 100%;
+}
+
 :deep(.el-input__wrapper) {
+  background: #232426;
+  border: 1.5px solid #393a3d;
   box-shadow: none;
-  border: 1px solid #2a323c;
-  border-radius: 8px;
-  background: #0b0f14;
+  transition: border-color 0.2s;
 }
 
 :deep(.el-input__wrapper.is-focus),
 :deep(.el-input__wrapper:hover) {
-  border-color: #3b82f6;
+  border-color: #4e8cff;
 }
 
-/* 输入内容与占位符颜色 */
 :deep(.el-input__inner) {
-  color: #e5e7eb;
+  color: #f3f4f6;
+  font-size: 1.08rem;
 }
 
 :deep(.el-input__inner::placeholder) {
-  color: #6b7280;
+  color: #7c7f85;
 }
 
-/* 按钮统一 100% 宽度，间距简洁 */
-.login-container :deep(.el-button) {
+.login-btn {
   width: 100%;
+  height: 48px;
+  font-size: 1.12rem;
   border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  background: #4e8cff;
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgba(78, 140, 255, 0.08);
+  transition: background 0.2s;
 }
 
-/* 主按钮为蓝色，适配深色背景 */
-.login-container :deep(.el-button--primary) {
-  background-color: #2563eb;
-  border-color: #2563eb;
-  color: #ffffff;
+.login-btn:hover {
+  background: #357ae8;
 }
 
-.login-container :deep(.el-button--primary:hover) {
-  background-color: #1d4ed8;
-  border-color: #1d4ed8;
+.login-divider {
+  width: 100%;
+  height: 1px;
+  background: #313235;
+  margin: 18px 0 10px 0;
+  opacity: 0.7;
 }
 
-/* 次按钮为深灰色，悬停略亮 */
-.login-container :deep(.el-button:is(:not(.el-button--primary))) {
-  background-color: #1f2937;
-  border-color: #374151;
-  color: #e5e7eb;
+.login-helper {
+  width: 100%;
+  text-align: center;
+  color: #bfc3c9;
+  font-size: 15px;
+  margin-bottom: 2px;
 }
 
-.login-container :deep(.el-button:is(:not(.el-button--primary)):hover) {
-  background-color: #374151;
-  border-color: #4b5563;
+.login-switch-btn {
+  color: #4e8cff;
+  font-weight: 500;
+  font-size: 15px;
+  margin-left: 4px;
+  padding: 0;
 }
 
-/* 表单项间距适当收敛，更显简洁 */
+.login-footer {
+  width: 100vw;
+  text-align: center;
+  color: #7c7f85;
+  font-size: 13px;
+  position: absolute;
+  left: 0;
+  bottom: 24px;
+  letter-spacing: 0.2px;
+}
+
 :deep(.el-form-item) {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 600px) {
+  .login-bg {
+    padding: 0 4vw;
+  }
+
+  .login-card {
+    padding: 24px 8px 20px 8px;
+    border-radius: 10px;
+    max-width: 100vw;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .login-header {
+    margin-bottom: 18px;
+  }
+
+  .login-title {
+    font-size: 1.1rem;
+  }
+
+  .login-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .login-btn {
+    height: 42px;
+    font-size: 1rem;
+  }
+
+  :deep(.el-input__wrapper) {
+    min-height: 40px;
+    font-size: 1rem;
+  }
+
+  .login-footer {
+    font-size: 12px;
+    bottom: 10px;
+  }
+}
+
+@media (max-width: 375px) {
+  .login-bg {
+    padding: 0 2vw;
+  }
+
+  .login-card {
+    padding: 14px 2px 12px 2px;
+    border-radius: 8px;
+  }
+
+  .login-title {
+    font-size: 1rem;
+  }
 }
 </style>

@@ -1,0 +1,32 @@
+// Element Plus 自定义主题变量示例
+// 你可以根据需要调整变量
+
+@use "element-plus/theme-chalk/src/dark/css-vars.scss" as *;
+
+:root {
+  // 亮色主题变量
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-3: #3b82f6;
+  --el-bg-color-page: #f6f8fa;
+  --el-bg-color-overlay: #fff;
+  --el-bg-color: #f6f8fa;
+  --el-text-color-primary: #22272b;
+  --el-text-color-secondary: #6b7280;
+  --el-text-color-placeholder: #9ca3af;
+  --el-border-color: #e5e7eb;
+  --el-input-height: 44px;
+}
+
+html.dark {
+  // 暗色主题变量
+  --el-color-primary: #2563eb;
+  --el-color-primary-light-3: #3b82f6;
+  --el-bg-color-page: #0f1115;
+  --el-bg-color-overlay: #121417;
+  --el-bg-color: #0b0f14;
+  --el-text-color-primary: #e5e7eb;
+  --el-text-color-secondary: #9ca3af;
+  --el-text-color-placeholder: #6b7280;
+  --el-border-color: #2a323c;
+  --el-input-height: 44px;
+}
