@@ -32,7 +32,7 @@ const COZE_USER_ID = "medical_record_user";
 export const extractTextFromFile = async (
   fileBuffer,
   fileType,
-  fileName = "document"
+  fileName = "document",
 ) => {
   try {
     if (!fileBuffer) {
@@ -52,9 +52,9 @@ export const extractTextFromFile = async (
 
     // 步骤 2: 调用工作流进行 OCR 识别
     console.log("[OCR] 步骤 2: 调用工作流进行文本识别...");
-    const extractedText = await callCozeWorkflow(fileId, fileName);
+    let extractedText = await callCozeWorkflow(fileId, fileName);
     console.log(`[OCR] 文本识别成功，提取字符数: ${extractedText.length}`);
-
+    extractedText = JSON.stringify(JSON.parse(extractedText).output);
     return extractedText;
   } catch (error) {
     console.error("[OCR] 文本识别失败:", error.message);
@@ -85,7 +85,7 @@ const uploadFileToCoze = async (fileBuffer, fileName, fileType) => {
           ...formData.getHeaders(),
           Authorization: `Bearer ${config.cozeApiKey}`,
         },
-      }
+      },
     );
 
     if (response.data.code !== 0) {
@@ -107,7 +107,6 @@ const uploadFileToCoze = async (fileBuffer, fileName, fileType) => {
  */
 const callCozeWorkflow = async (fileId, fileName) => {
   try {
-
     // 构建请求参数
     const payload = {
       workflow_id: config.cozeWorkflowId,
@@ -127,13 +126,13 @@ const callCozeWorkflow = async (fileId, fileName) => {
         headers: {
           Authorization: `Bearer ${config.cozeApiKey}`,
           "Content-Type": "application/json",
-        }
-      }
+        },
+      },
     );
 
     if (chatResponse.data.code !== 0) {
       throw new Error(
-        `Coze 工作流错误: ${chatResponse.data.msg || "未知错误"}`
+        `Coze 工作流错误: ${chatResponse.data.msg || "未知错误"}`,
       );
     }
 
