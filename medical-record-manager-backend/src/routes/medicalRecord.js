@@ -34,33 +34,25 @@ const fixFileName = (fileName) => {
 
 /**
  * POST /api/medical-records/upload
- * 上传医疗记录文件并进行 OCR 识别
+ * 批量上传医疗记录文件并进行 OCR 识别
  */
-router.post("/upload", upload.single("file"), async (req, res) => {
+router.post("/upload", upload.array("file"), async (req, res) => {
   try {
-    const { userId, patientId, recordType, remarks } = req.body;
-    const file = req.file;
+    const { userId, patientId, recordType, remarks, checkTime } = req.body;
+    const files = req.files;
 
-    // 修复文件名编码
-    if (file) {
-      file.originalname = fixFileName(file.originalname);
-    }
-
-    // 验证必要字段
-    if (!userId || !patientId || !file) {
+    if (!userId || !patientId || !files || files.length === 0) {
       return res.status(400).json({
         success: false,
         message: "缺少必要字段: userId, patientId, file",
       });
     }
-
     if (!recordType) {
       return res.status(400).json({
         success: false,
         message: "缺少字段: recordType",
       });
     }
-
     if (req.user?.userId && req.user.userId !== userId) {
       return res.status(403).json({
         success: false,
@@ -68,92 +60,84 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       });
     }
 
-    // 验证文件类型
-    const ext = path.extname(file.originalname).toLowerCase();
-    let fileType;
-    if ([".jpg", ".jpeg", ".png"].includes(ext)) {
-      fileType = "image";
-    } else if (ext === ".pdf") {
-      fileType = "pdf";
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: "不支持的文件类型，仅支持 JPG、PNG、PDF",
-      });
-    }
-
-    console.log(`[MedicalRecord] 收到文件上传请求: ${file.originalname}`);
-
-    // 上传文件到文件服务器
-    console.log("[MedicalRecord] 上传文件到文件服务器...");
-    const {
-      fileUrl,
-      filePath,
-      fileName: savedFileName,
-      originalFileName,
-    } = await saveUploadedFile(
-      file.buffer,
-      userId,
-      patientId,
-      file.originalname,
-    );
-    console.log(`[MedicalRecord] 文件已上传到文件服务器: ${fileUrl}`);
-
-    // 调用 OCR 提取文本
-    console.log("[MedicalRecord] 开始 OCR 文本识别...");
-    let extractedText = "";
-    try {
-      extractedText = await extractTextFromFile(
-        file.buffer,
-        fileType,
-        file.originalname,
-      );
-      console.log(
-        `[MedicalRecord] OCR 识别成功，提取 ${extractedText.length} 个字符`,
-      );
-    } catch (ocrError) {
-      console.error("[MedicalRecord] OCR 识别失败:", ocrError.message);
-      // OCR 失败不影响记录创建，仅记录错误
-      extractedText = `[OCR 识别失败] ${ocrError.message}`;
-    }
-
-    // 创建医疗记录
-    console.log("[MedicalRecord] 创建医疗记录数据库记录...");
+    // 统一检查时间
     const normalizeCheckDate = (val) => {
       if (!val) return new Date();
-      // 避免 YYYY-MM-DD 被当作 UTC 导致时区偏移，显式指定本地 00:00:00
       return new Date(`${val}T00:00:00`);
     };
+    const normalizedCheckTime = normalizeCheckDate(checkTime);
 
-    const normalizedCheckTime = normalizeCheckDate(req.body.checkTime);
-
-    const medicalRecord = await MedicalRecord.create({
-      patientId,
-      recordType,
-      checkTime: normalizedCheckTime,
-      fileName: savedFileName,
-      originalFileName: originalFileName,
-      filePath: fileUrl,
-      extractedText,
-      fileType,
-      remarks: remarks || "",
-    });
-    console.log(`[MedicalRecord] 医疗记录已创建，ID: ${medicalRecord._id}`);
-
-    res.json({
-      success: true,
-      message: "文件上传成功",
-      data: {
+    const results = [];
+    for (const file of files) {
+      file.originalname = fixFileName(file.originalname);
+      // 验证文件类型
+      const ext = path.extname(file.originalname).toLowerCase();
+      let fileType;
+      if ([".jpg", ".jpeg", ".png"].includes(ext)) {
+        fileType = "image";
+      } else if (ext === ".pdf") {
+        fileType = "pdf";
+      } else {
+        results.push({
+          success: false,
+          fileName: file.originalname,
+          message: "不支持的文件类型，仅支持 JPG、PNG、PDF",
+        });
+        continue;
+      }
+      console.log(`[MedicalRecord] 收到文件上传请求: ${file.originalname}`);
+      // 上传文件到文件服务器
+      const {
+        fileUrl,
+        filePath,
+        fileName: savedFileName,
+        originalFileName,
+      } = await saveUploadedFile(
+        file.buffer,
+        userId,
+        patientId,
+        file.originalname,
+      );
+      // OCR
+      let extractedText = "";
+      try {
+        extractedText = await extractTextFromFile(
+          file.buffer,
+          fileType,
+          file.originalname,
+        );
+      } catch (ocrError) {
+        extractedText = `[OCR 识别失败] ${ocrError.message}`;
+      }
+      // 创建记录
+      const medicalRecord = await MedicalRecord.create({
+        patientId,
+        recordType,
+        checkTime: normalizedCheckTime,
+        fileName: savedFileName,
+        originalFileName: originalFileName,
+        filePath: fileUrl,
+        extractedText,
+        fileType,
+        remarks: remarks || "",
+      });
+      results.push({
+        success: true,
         recordId: medicalRecord._id,
         fileName: medicalRecord.fileName,
         originalFileName: medicalRecord.originalFileName,
         filePath: medicalRecord.filePath,
         extractedText: medicalRecord.extractedText,
         uploadedAt: medicalRecord.uploadedAt,
-      },
+      });
+    }
+    res.json({
+      success: true,
+      message: "文件上传处理完成",
+      data: results,
     });
   } catch (error) {
-    console.error("[MedicalRecord] 上传失败:", error.message);
+    console.error("[MedicalRecord] 批量上传失败:", error.message);
     res.status(500).json({
       success: false,
       message: error.message || "文件上传失败",

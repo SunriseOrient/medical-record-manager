@@ -16,11 +16,11 @@
 
       <el-form-item label="选择文件" required>
         <div style="overflow: hidden;width: 100%;">
-          <el-upload ref="upload" :auto-upload="false" :limit="1" :on-exceed="handleExceed" :on-change="onFileChange"
-            :http-request="noopRequest">
+          <el-upload ref="upload" :auto-upload="false" :multiple="true" :limit="20" :on-exceed="handleExceed"
+            :on-change="onFileChange" :http-request="noopRequest" :file-list="fileList" accept=".jpg,.jpeg,.png,.pdf">
             <el-button type="primary">选择文件</el-button>
             <template #tip>
-              <div class="el-upload__tip">支持图片或 PDF 文件</div>
+              <div class="el-upload__tip">支持批量上传图片或 PDF 文件（最多20个）</div>
             </template>
           </el-upload>
         </div>
@@ -70,30 +70,27 @@ const visible = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
+
 // Form state
 const form = ref({
   recordType: '',
   checkTime: null,
-  file: null,
 })
-const fileName = ref('')
+const fileList = ref([])
 const uploadLoading = ref(false)
 
 const noopRequest = () => Promise.resolve()
 
 const handleExceed = (files) => {
-  upload.value.clearFiles()
-  const file = files[0]
-  upload.value.handleStart(file)
+  ElMessage.warning('最多只能选择20个文件')
 }
 
 const reset = () => {
   form.value = {
     recordType: '',
     checkTime: null,
-    file: null,
   }
-  fileName.value = ''
+  fileList.value = []
   upload.value?.clearFiles()
 }
 
@@ -102,25 +99,28 @@ const close = () => {
   reset()
 }
 
-const onFileChange = (file) => {
-  form.value.file = file?.raw ?? null
-  fileName.value = file?.name ?? ''
+
+const onFileChange = (file, fileList_) => {
+  fileList.value = fileList_.map(f => f)
 }
+
 
 const submit = async () => {
   if (!props.patientId) {
     ElMessage.warning('请先选择就诊人')
     return
   }
-  if (!form.value.file || !form.value.recordType || !form.value.checkTime) {
-    ElMessage.warning('请填写所有必填项')
+  if (!fileList.value.length || !form.value.recordType || !form.value.checkTime) {
+    ElMessage.warning('请填写所有必填项并选择文件')
     return
   }
 
   try {
     uploadLoading.value = true
     const fd = new FormData()
-    fd.append('file', form.value.file)
+    fileList.value.forEach(f => {
+      fd.append('file', f.raw)
+    })
     fd.append('userId', props.userId)
     fd.append('patientId', props.patientId)
     const dateStr = form.value.checkTime instanceof Date
@@ -130,10 +130,13 @@ const submit = async () => {
     fd.append('recordType', form.value.recordType)
 
     const resp = await medicalRecordAPI.uploadRecord(fd)
-    ElMessage.success('病例上传成功')
-
-    emit('upload-success', resp?.data?.data ?? null)
-    close()
+    if (resp?.data?.success) {
+      ElMessage.success('病例上传成功')
+      emit('upload-success', resp?.data?.data ?? null)
+      close()
+    } else {
+      ElMessage.error(resp?.data?.message || '病例上传失败')
+    }
   } catch (err) {
     ElMessage.error('病例上传失败')
     console.error('上传病例出错:', err)
