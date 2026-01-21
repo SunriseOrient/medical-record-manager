@@ -82,7 +82,8 @@ export const patientAPI = {
  * 病例相关 API
  */
 export const medicalRecordAPI = {
-  getRecords: (patientId) => instance.get(`/api/medical-records/${patientId}`),
+  getRecords: (patientId, params = {}) =>
+    instance.get(`/api/medical-records/${patientId}`, { params }),
 
   uploadRecord: (formData) =>
     instance.post("/api/medical-records/upload", formData, {

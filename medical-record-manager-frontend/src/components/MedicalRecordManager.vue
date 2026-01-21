@@ -7,7 +7,7 @@
           <el-button type="primary" @click="openUploadDialog">上传病例</el-button>
         </div>
         <el-table :data="records" stripe :loading="loading" empty-text="暂无病例">
-          <el-table-column type="index" label="序号" width="60" align="center" />
+          <el-table-column type="index" label="序号" width="60" align="center" :index="indexMethod" />
           <el-table-column label="检查时间" width="100" align="center">
             <template #default="{ row }">
               {{ formatDate(row.checkTime) }}
@@ -36,6 +36,19 @@
             </template>
           </el-table-column>
         </el-table>
+        <!-- 分页组件 -->
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end">
+          <el-pagination
+            v-if="pagination.total > 0"
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.limit"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
       </div>
       <template #footer>
         <el-button @click="showDialog = false">关闭</el-button>
@@ -215,6 +228,12 @@ const loading = ref(false);
 const saveEditLoading = ref(false);
 const records = ref([]);
 const currentRecord = ref(null);
+const pagination = ref({
+  page: 1,
+  limit: 20,
+  total: 0,
+  totalPages: 0,
+});
 const filePreviewUrl = ref("");
 const uploadDialogRef = ref(null);
 
@@ -264,14 +283,40 @@ const loadRecords = async () => {
 
   try {
     loading.value = true;
-    const response = await medicalRecordAPI.getRecords(props.currentPatientId);
-    records.value = response.data.data.records || [];
+    const response = await medicalRecordAPI.getRecords(props.currentPatientId, {
+      page: pagination.value.page,
+      limit: pagination.value.limit,
+    });
+    const data = response.data.data;
+    records.value = data.records || [];
+    pagination.value = {
+      ...pagination.value,
+      total: data.pagination.total,
+      totalPages: data.pagination.totalPages,
+    };
   } catch (error) {
     ElMessage.error("加载病例列表失败");
     console.error("加载病例列表出错:", error);
   } finally {
     loading.value = false;
   }
+};
+
+// 分页处理
+const handlePageChange = (page) => {
+  pagination.value.page = page;
+  loadRecords();
+};
+
+const handleSizeChange = (size) => {
+  pagination.value.limit = size;
+  pagination.value.page = 1; // 改变每页条数时重置到第一页
+  loadRecords();
+};
+
+// 序号列索引方法（支持分页）
+const indexMethod = (index) => {
+  return (pagination.value.page - 1) * pagination.value.limit + index + 1;
 };
 
 const openUploadDialog = () => {
